@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: true
+  
+  roles: 
+    - role: common
+    - role: user
+    - role: ssh
+    - role: ruby
+      tags: ruby
+    - role: nodejs
+      tags: nodejs
+    - role: yarn
+      tags: nodejs
+    - role: postgresql
+      tags: postgresql
+    - role: redis
+      tags: redis
+    - role: nginx
+      tags: nginx

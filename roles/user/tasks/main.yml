@@ -1,0 +1,41 @@
+---
+- name: Ensure sudo group is present
+  group:
+    name: sudo
+    state: present
+
+- name: Ensure sudo group has sudo privileges
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^%sudo"
+    line: "%sudo ALL=(ALL:ALL) ALL"
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Make sure we have a deployment group
+  group:
+    name: "{{ deploy_group }}"
+    state: present
+
+- name: Allow deployment group to have passwordless sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%{{ deploy_group }}'
+    line: '%{{ deploy_group }} ALL=(ALL) NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Create a new regular user with sudo privileges
+  user:
+    name: "{{ deploy_user }}"
+    state: present
+    groups: "{{ deploy_group }}"
+    append: true
+    create_home: true
+    shell: /bin/bash
+
+- name: Set authorized key for remote user
+  authorized_key:
+    user: "{{ deploy_user }}"
+    state: present
+    key: "{{ copy_local_key }}"

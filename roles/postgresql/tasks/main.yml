@@ -1,0 +1,81 @@
+---
+- name: Shell locales
+  copy:
+    dest: /etc/profile.d/lang.sh
+    content: |
+      export LANGUAGE="{{ postgresql_locale }}.{{ postgresql_shell_encoding }}"
+      export LANG="{{ postgresql_locale }}.{{ postgresql_shell_encoding }}"
+      export LC_ALL="{{ postgresql_locale }}.{{ postgresql_shell_encoding }}"
+
+- name: Add postgres repo key
+  apt_key:
+    url: "{{ postgresql_apt_key }}"
+
+- name: Add postgres repo
+  apt_repository:
+    repo: "{{ postgresql_apt_repo }}"
+
+- name: Install required postgres packages
+  apt: name={{ item }} state=latest update_cache=yes cache_valid_time=86400
+  loop:
+    - "{{ postgresql_packages }}"
+    - "{{ postgresql_python_packages }}"
+    - "postgresql-{{ postgresql_version }}"
+    - "postgresql-contrib-{{ postgresql_version }}"
+
+- name: Configure
+  template:
+    src: "{{ pg_hba_template }}"
+    dest: "{{ postgresql_config_path }}/pg_hba.conf"
+
+- name: Configure
+  template:
+    src: "{{ postgresql_parameters_template }}"
+    dest: "{{ postgresql_config_path }}/postgresql.conf"
+  notify:
+  - restart postgresql
+
+- meta: flush_handlers
+
+- name: Template locales
+  shell: >
+    psql -c "update pg_database
+      set
+        encoding = pg_char_to_encoding('{{ postgresql_encoding }}'),
+        datctype = '{{ postgresql_locale }}.{{ postgresql_encoding }}',
+        datcollate = '{{ postgresql_locale }}.{{ postgresql_encoding }}'
+      where
+        encoding != pg_char_to_encoding('{{ postgresql_encoding }}')
+        or datctype != '{{ postgresql_locale }}.{{ postgresql_encoding }}'
+        or datcollate != '{{ postgresql_locale }}.{{ postgresql_encoding }}';"
+  register: postgresql_update_template_result
+  changed_when: >
+    postgresql_update_template_result.stdout is defined
+    and 'UPDATE 0' != postgresql_update_template_result.stdout
+  ignore_errors: yes
+  become: yes
+  become_user: "{{ postgresql_admin_user }}"
+
+- name: Users
+  postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    role_attr_flags: "{{ item.role_attr_flags | default(postgresql_users_role_attr_flags) | join(',') | replace('\\n', '') }}"
+  when: item.name != ''
+  with_items: "{{ postgresql_users }}"
+  become: yes
+  become_user: "{{ postgresql_admin_user }}"
+
+- name: Databases
+  postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default(postgresql_user, true) }}"
+    encoding: "{{ item.encoding | default(postgresql_encoding) }}"
+    lc_collate: "{{ item.lc_collate | default(postgresql_locale + '.' + postgresql_encoding) }}"
+    lc_ctype: "{{ item.lc_ctype | default(postgresql_locale + '.' + postgresql_encoding) }}"
+    template: "{{ item.template | default('template0') }}"
+    state: present
+  when: item.name != ''
+  with_items: "{{ postgresql_databases }}"
+  become: yes
+  become_user: "{{ postgresql_admin_user }}"

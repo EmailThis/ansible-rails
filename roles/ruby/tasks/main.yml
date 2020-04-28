@@ -1,0 +1,87 @@
+---
+- name: Install rbenv
+  become: yes
+  become_user: "{{ deploy_user }}"
+  git:
+    repo: "https://github.com/sstephenson/rbenv.git"
+    dest: "{{ rbenv_root_path }}"
+    depth: 1
+    accept_hostkey: yes
+    clone: yes
+    update: yes
+
+- name: Install ruby-build
+  become: yes
+  become_user: "{{ deploy_user }}"
+  git:
+    repo: "https://github.com/sstephenson/ruby-build.git"
+    dest: "{{ rbenv_root_path }}/plugins/ruby-build"
+    depth: 1
+
+- name: Install rbenv-vars
+  become: yes
+  become_user: "{{ deploy_user }}"
+  git:
+    repo: "https://github.com/rbenv/rbenv-vars.git"
+    dest: "{{ rbenv_root_path }}/plugins/rbenv-vars"
+    depth: 1
+
+- name: Ensure {{ rbenv_shell_rc }} exists
+  become: true
+  become_user: "{{ deploy_user }}"
+  shell: "touch {{ rbenv_shell_rc_path }}"
+  args:
+    creates: "{{ rbenv_shell_rc_path }}"
+
+- name: Export RBENV_ROOT in {{ rbenv_shell_rc_path }}
+  become: true
+  become_user: "{{ deploy_user }}"
+  lineinfile:
+    dest: "{{ rbenv_shell_rc_path }}"
+    regexp: "^export RBENV_ROOT="
+    line: "export RBENV_ROOT={{ rbenv_root_path }}"
+
+- name: Put rbenv in users PATH in {{ rbenv_shell_rc_path }}
+  become: true
+  become_user: "{{ deploy_user }}"
+  lineinfile:
+    dest: "{{ rbenv_shell_rc_path }}"
+    regexp: "^PATH=\\$PATH:\\$RBENV_ROOT/bin"
+    line: "PATH=$RBENV_ROOT/bin:$PATH"
+
+- name: Put $RBENV_ROOT/shims in users $PATH in {{ rbenv_shell_rc_path }}
+  become: true
+  become_user: "{{ deploy_user }}"
+  lineinfile:
+    dest: "{{ rbenv_shell_rc_path }}"
+    regexp: "^PATH=\\$RBENV_ROOT/shims:\\$PATH"
+    line: "PATH=$RBENV_ROOT/shims:$PATH"
+
+- name: Install Rubies
+  become: yes
+  become_user: "{{ deploy_user }}"
+  shell: "{{ rbenv_ruby_configure_opts | default('') }} {{ rbenv_bin }} install {{ item }}"
+  args:
+    creates: "{{ rbenv_root_path }}/versions/{{ item }}"
+  with_flattened:
+  - "{{ additional_rubies }}"
+  - "{{ ruby_version }}"
+
+
+- name: Check default ruby
+  shell: '{{ rbenv_bin }} version | grep -oE "^[^ ]+"'
+  changed_when: no
+  register: rbenv_current_version
+  become: yes
+  become_user: "{{ deploy_user }}"
+
+- name: Set default ruby
+  shell: "{{ rbenv_bin }} global {{ ruby_version }}"
+  become: yes
+  become_user: "{{ deploy_user }}"
+  when: rbenv_current_version.stdout != ruby_version
+
+- name: Install Bundler
+  shell: "{{ rbenv_root_path }}/shims/gem install bundler"
+  become: yes
+  become_user: "{{ deploy_user }}"

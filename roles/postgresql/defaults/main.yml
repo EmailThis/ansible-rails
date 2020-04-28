@@ -1,0 +1,97 @@
+---
+postgresql_version: "9.6"
+
+postgresql_packages:
+  - "postgresql-{{ postgresql_version }}"
+  - "postgresql-contrib-{{ postgresql_version }}"
+
+postgresql_python_packages:
+  - "python3-psycopg2"
+
+postgresql_apt_url: "https://apt.postgresql.org/pub/repos/apt"
+postgresql_apt_key: "{{ postgresql_apt_url }}/ACCC4CF8.asc"
+postgresql_apt_repo: "deb {{ postgresql_apt_url }}/ {{ ansible_lsb.codename }}-pgdg main"
+
+postgresql_config_path: /etc/postgresql/{{ postgresql_version }}/main
+postgresql_data_path: /var/lib/postgresql/{{ postgresql_version }}/main
+postgresql_pid_file: /var/run/postgresql/{{ postgresql_version }}-main.pid
+
+# default admin user
+postgresql_admin_user: postgres
+
+# table locale and character encoding
+postgresql_locale: "en_US"
+postgresql_encoding: "UTF-8"
+
+# shell locale and character encoding
+postgresql_shell_locale: "{{ postgresql_locale }}"
+postgresql_shell_encoding: "{{ postgresql_encoding | replace('-', '') | lower }}"
+
+pg_hba_template: "pg_hba.conf.j2"
+postgresql_parameters_template: "postgresql.conf.j2"
+
+# default application database
+postgresql_db_user: '' # name of the user (empty means no user is created)
+postgresql_db_password: ''
+postgresql_db_name: '' # name of the database (empty means no database is created)
+
+# all the created users
+postgresql_users:
+- name: "{{ postgresql_db_user | default('') }}"
+  password: "{{ postgresql_db_password | default('') }}" # only needed if user is given
+  role_attr_flags: "{{ postgresql_users_role_attr_flags }}"
+
+# all the created databases
+postgresql_databases:
+- name: "{{ postgresql_db_name }}"
+  owner: "{{ postgresql_db_user | default('') }}" # empty mean 'postgres' user will own it
+  # encoding: "{{ postgresql_encoding }}"
+  # lc_collate: "{{ postgresql_locale }}.{{ postgresql_encoding }}"
+  # lc_ctype: "{{ postgresql_locale }}.{{ postgresql_encoding }}"
+  # template: template0
+
+# default user attr_flags
+postgresql_users_role_attr_flags:
+- CREATEDB
+- NOSUPERUSER
+
+
+# variables to build postgresql.conf
+# postgresql_host: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+postgresql_listen:
+  - "localhost"
+
+postgresql_port: 5432
+postgresql_max_connections: 100
+
+postgresql_connections:
+  ssl: false
+
+postgresql_resources:
+  shared_buffers: 128MB
+
+postgresql_write_ahead_log: {}
+postgresql_replication: {}
+postgresql_query_tuning: {}
+postgresql_logging:
+  log_line_prefix: "'%t '"
+  log_timezone: "'UTC'"
+
+postgresql_runtime_statistics: {}
+postgresql_autovacuum: {}
+postgresql_client_connection_defaults:
+  datestyle: "'iso, mdy'"
+  timezone: "'UTC'"
+  lc_messages: "'{{ postgresql_locale }}.{{ postgresql_encoding }}'"
+  lc_monetary: "'{{ postgresql_locale }}.{{ postgresql_encoding }}'"
+  lc_numeric: "'{{ postgresql_locale }}.{{ postgresql_encoding }}'"
+  lc_time: "'{{ postgresql_locale }}.{{ postgresql_encoding }}'"
+  default_text_search_config: "'pg_catalog.english'"
+
+postgresql_lock_management: {}
+postgresql_cutomized: {}
+
+postgresql_service: postgresql
+
+postgresql_socket_directories:
+  - "/var/run/postgresql"

@@ -1,0 +1,69 @@
+---
+- name: Add Nginx repo
+  apt_repository:
+    repo: ppa:nginx/stable
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    force: yes
+    update_cache: yes
+
+- name: Copy nginx config files
+  copy:
+    src: "{{ item }}"
+    dest: /etc/nginx
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+  with_items:
+    - nginx.conf
+    - config
+
+- name: Generate DH Parameters with a different size (2048 bits)
+  openssl_dhparam:
+    path: /etc/nginx/dhparam.pem
+    size: 2048
+  when: nginx_https_enabled == true  
+
+- name: Create a directory if it does not exist
+  file:
+    path: "/etc/nginx/{{ item }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0644
+  with_items:
+    - sites-available
+    - sites-enabled
+
+- name: Copy nginx configuration in place.
+  template:
+    src: "{{ nginx_conf_template }}"
+    dest: "/etc/nginx/sites-available/default"
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0644
+
+- name: Symlink default site
+  file: 
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+
+- name: Set Nginx user
+  lineinfile: 
+    dest: /etc/nginx/nginx.conf
+    regexp: "^user"
+    line: "user {{ deploy_user }};"
+    state: present
+
+# No need to restart nginx nginx_https_enabled is set to true
+# because certbot will install the certificates and then restart nginx
+- name: Restart nginx (when not running certbot)
+  command: "/bin/true"
+  notify: 
+    - reload nginx
+    - restart nginx
+  when: nginx_https_enabled != true 
+

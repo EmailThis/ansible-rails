@@ -1,0 +1,54 @@
+---
+app_name: blog
+deploy_user: deployer
+deploy_group: "{{ deploy_user }}"
+deploy_user_path: "/home/{{ deploy_user }}"
+
+# Common
+required_packages:
+  - zlib1g-dev 
+  - build-essential 
+  - libssl-dev 
+  - libreadline-dev 
+  - libyaml-dev 
+  - libxml2-dev 
+  - libxslt1-dev 
+  - libcurl4-openssl-dev
+  - libffi-dev 
+  - dirmngr 
+  - gnupg
+  - autoconf
+  - bison
+  - libreadline6-dev
+  - libncurses5-dev
+  - libgdbm5 
+  - libgdbm-dev
+  - libpq-dev # postgresql client
+  - libjemalloc-dev # jemalloc
+
+# Ruby
+ruby_version: 2.6.6
+rbenv_ruby_configure_opts: "RUBY_CONFIGURE_OPTS=--with-jemalloc"
+rbenv_root_path: "{{ deploy_user_path }}/.rbenv"
+rbenv_shell_rc_path: "{{ deploy_user_path }}/.bashrc"
+rubies_path: "{{ rbenv_root_path }}/versions"
+ruby_path: "{{ rubies_path }}/{{ ruby_version }}"
+rbenv_bin: "{{ rbenv_root_path }}/bin/rbenv"
+bundle: "{{ rbenv_root_path }}/shims/bundle"
+
+# Nodejs
+nodejs_version: "12.x"
+
+# Postgresql
+postgresql_version: "9.6"
+postgresql_db_user: "{{ deploy_user }}_postgresql_user"
+postgresql_db_password: "{{ postgresql_db_password }}" # from vault
+postgresql_db_name: "{{ app_name }}_production"
+postgresql_listen:
+  - "localhost"
+  - "{{ ansible_default_ipv4.address }}"
+
+
+# nginx
+nginx_https_enabled: false # replace after setting up certbot
+nginx_conf_template: "nginx.conf.j2"

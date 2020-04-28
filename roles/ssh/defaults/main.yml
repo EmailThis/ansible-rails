@@ -1,0 +1,8 @@
+ssh_port: 22
+ssh_password_authentication: "no"
+ssh_permit_root_login: "no"
+ssh_usedns: "no"
+ssh_permit_empty_password: "no"
+ssh_challenge_response_auth: "no"
+ssh_gss_api_authentication: "no"
+ssh_x11_forwarding: "no"

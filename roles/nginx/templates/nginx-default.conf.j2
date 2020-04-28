@@ -1,0 +1,11 @@
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name {{ inventory_hostname }};
+
+	location / {
+        return 200 "ok";
+        add_header Content-Type text/plain;
+    }
+}
