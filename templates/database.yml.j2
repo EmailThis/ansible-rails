@@ -1,0 +1,8 @@
+production:
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  database: "{{ postgresql_db_name }}"
+  username: "{{ postgresql_db_user }}"
+  password: "{{ postgresql_db_password }}"
+  host: "localhost"

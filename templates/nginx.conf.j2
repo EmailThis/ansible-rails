@@ -1,11 +1,24 @@
+upstream app {
+    # Path to Puma SOCK file, as defined previously
+    server unix:///{{ puma_socket }} fail_timeout=0;
+}
+
 server {
-	listen 80;
-	listen [::]:80;
+    listen 80;
+    server_name localhost;
 
-	server_name {{ inventory_hostname }};
+    root {{ app_current_path }}/public;
 
-	location / {
-        return 200 "Hello, world";
-        add_header Content-Type text/plain;
+    try_files $uri/index.html $uri @app;
+
+    location @app {
+        proxy_pass http://app;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
     }
+
+    error_page 500 502 503 504 /500.html;
+    client_max_body_size 4G;
+    keepalive_timeout 10;
 }

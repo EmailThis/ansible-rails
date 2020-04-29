@@ -1,6 +1,9 @@
 ---
 - hosts: all
   become: true
+
+  vars_files:
+    - app-vars
   
   roles: 
     - role: common

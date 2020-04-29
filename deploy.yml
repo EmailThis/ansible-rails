@@ -1,0 +1,65 @@
+---
+- name: Deploy our rails application
+  hosts: all
+  become: true
+  become_user: "{{ deploy_user }}"
+
+  pre_tasks:
+    - name: Setup app folder
+      file:
+        state: directory
+        path: "{{ app_root_path }}"
+        owner: "{{ deploy_user }}" 
+        group: "{{ deploy_group }}"
+
+    - name: Copy rbenv-vars file
+      copy:
+        src: ".production.rbenv-vars"
+        dest: "{{ app_root_path }}/.rbenv-vars"
+        owner: "{{ deploy_user }}" 
+        group: "{{ deploy_group }}"
+
+    - name: Make shared directories
+      file: 
+        path: "{{ app_shared_path }}/{{ item }}" 
+        state: directory
+        owner: "{{ deploy_user }}" 
+        group: "{{ deploy_group }}"
+      with_items:
+        - tmp
+        - tmp/pids
+        - tmp/cache
+        - sockets
+        - log
+        - public
+        - public/packs
+        - vendor
+        - vendor/bundle
+        - bin
+        - config
+        - config/puma
+        - assets
+        - node_modules # Webpacker
+    
+    - name: Upload files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ app_shared_path }}/{{ item.dest }}"
+        owner: "{{ deploy_user }}" 
+        group: "{{ deploy_group }}"
+      with_items: "{{ files_to_copy }}"
+      tags:
+        - copy
+
+  roles:
+    - role: ansistrano.deploy
+    
+    - role: puma
+      tags: puma
+      become: true
+      become_user: root
+      
+    - role: sidekiq
+      tags: sidekiq
+      become: true
+      become_user: root

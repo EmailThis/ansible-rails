@@ -1,0 +1,27 @@
+---
+- name: Copy sidekiq.service
+  template:
+    src: "{{ sidekiq_service_file }}"
+    dest: /lib/systemd/system/sidekiq.service
+    force: yes
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0644
+  register: sidekiq_service_file
+
+- name: Ensure that we re-read sidekiq.service
+  systemd:
+    daemon_reload: yes
+    name: "sidekiq"
+  when: sidekiq_service_file.changed
+
+- name: Enable sidekiq
+  service:
+    name: sidekiq
+    enabled: yes
+
+- name: Restart sidekiq
+  service:
+    name: sidekiq
+    state: restarted
+  

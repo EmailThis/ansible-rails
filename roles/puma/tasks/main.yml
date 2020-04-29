@@ -1,0 +1,26 @@
+---
+- name: Copy puma.service
+  template:
+    src: "{{ puma_service_file }}"
+    dest: /lib/systemd/system/puma.service
+    force: yes
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0644
+  register: puma_service_file
+
+- name: Ensure that we re-read puma.service
+  systemd:
+    daemon_reload: yes
+    name: "puma"
+  when: puma_service_file.changed
+
+- name: Enable puma
+  service:
+    name: puma
+    enabled: yes
+
+- name: Restart puma
+  service:
+    name: puma
+    state: restarted

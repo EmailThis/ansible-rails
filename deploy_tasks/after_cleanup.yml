@@ -1,0 +1,20 @@
+---
+- name: Bundle install with --deploy
+  bundler:
+    state: present
+    deployment_mode: yes
+    gem_path: "../../shared/vendor/bundle" # relative to chdir
+    chdir: "{{ ansistrano_release_path.stdout }}"
+    exclude_groups: ["development", "test"]
+    executable: "{{ rbenv_bundle }}"
+    
+- name: Running pending migrations
+  shell: "{{ rbenv_bundle }} exec rake db:migrate"
+  run_once: true
+  args:
+    chdir: "{{ ansistrano_release_path.stdout }}"
+
+- name: Precompiling assets
+  shell: "{{ rbenv_bundle }} exec rake assets:precompile"
+  args:
+    chdir: "{{ ansistrano_release_path.stdout }}"

@@ -1,0 +1,26 @@
+[Unit]
+Description=Puma HTTP Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ deploy_user }}
+EnvironmentFile={{ app_root_path }}/.rbenv-vars
+
+WorkingDirectory={{ app_current_path }}
+
+ExecStart={{ rbenv_bundle }} exec puma -C {{ app_current_path }}/config/puma.rb
+ExecStop={{ rbenv_bundle }} exec puma -S {{ app_current_path }}/config/puma.rb
+PIDFile={{ app_pids_path }}/puma.pid
+
+# Should systemd restart puma?
+# Use "no" (the default) to ensure no interference when using
+# stop/start/restart via `pumactl`.  The "on-failure" setting might
+# work better for this purpose, but you must test it.
+# Use "always" if only `systemctl` is used for start/stop/restart, and
+# reconsider if you actually need the forking config.
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
