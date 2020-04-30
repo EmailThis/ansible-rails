@@ -101,3 +101,10 @@ postgresql_listen:
 # nginx
 nginx_https_enabled: false # replace after setting up certbot
 nginx_conf_template: "nginx.conf.j2"
+
+
+# certbot
+certbot_email: "admin@{{ inventory_hostname }}"
+certbot_domains:
+  - "{{ inventory_hostname }}"
+  - "www.{{ inventory_hostname }}"

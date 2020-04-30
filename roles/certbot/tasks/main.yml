@@ -1,0 +1,27 @@
+---
+- name: Create certbot directory
+  file: path=/opt/certbot state=directory mode=0755 owner=root group=root
+
+- name: Install certbot standalone
+  get_url:
+    url: "{{ certbot_url }}"
+    dest: "{{ certbot_dir }}/certbot-auto"
+
+- name: Ensure certbot-auto is executable.
+  file:
+    path: "{{ certbot_dir }}/certbot-auto"
+    mode: 0755
+
+- name: Ensure that nginx is stopped
+  service: 
+    name: nginx
+    state: stopped
+
+- name: Get certificate
+  include_tasks: cert.yml
+  loop: "{{ certbot_domains }}"
+  loop_control:
+    loop_var: domain
+
+- name: Add certbot renewel cronjob
+  cron: name="renew letsencrypt certificates" hour="0" minute="0" job="/bin/bash {{ certbot_dir }}/certbot-auto renew --non-interactive --quiet --standalone --pre-hook 'service nginx stop' --post-hook 'service nginx start'"
