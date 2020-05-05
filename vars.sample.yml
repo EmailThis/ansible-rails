@@ -108,3 +108,17 @@ certbot_email: "admin@{{ inventory_hostname }}"
 certbot_domains:
   - "{{ inventory_hostname }}"
   - "www.{{ inventory_hostname }}"
+
+
+# PostgreSQL Backup to S3
+aws_key: "{{ vault_aws_key }}"
+aws_secret: "{{ vault_aws_secret }}"
+
+postgresql_backup_dir: "{{ deploy_user_path }}/backups"
+postgresql_backup_filename_format: >-
+  {{ app_name }}-%Y%m%d-%H%M%S.pgdump
+postgresql_db_backup_healthcheck: "NOTIFICATION_URL (eg: https://healthchecks.io/)"
+postgresql_s3_backup_bucket: "DB_BACKUP_BUCKET"
+postgresql_s3_backup_hour: "3"
+postgresql_s3_backup_minute: "*"
+postgresql_s3_backup_delete_after: "7 days" # days after which old backups should be deleted

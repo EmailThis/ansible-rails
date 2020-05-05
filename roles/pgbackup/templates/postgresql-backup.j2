@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+NOW=$(date +"%Y-%m-%d-at-%H-%M-%S")
+FILENAME="{{ postgresql_db_name }}"-"$NOW"
+
+DELETION_TIMESTAMP=`[ "$(uname)" = Linux ] && date +%s --date="-{{ postgresql_s3_backup_delete_after }}"`
+
+echo " * Generating backup";
+PGPASSWORD={{ postgresql_db_password }} pg_dump -Fc --no-acl --no-owner -h localhost -U {{ postgresql_db_user }} {{ postgresql_db_name }} > {{ postgresql_backup_dir }}/"$FILENAME".dump
+
+echo " * Uploading to S3";
+aws s3 cp {{ postgresql_backup_dir }}/"$FILENAME".dump s3://{{ postgresql_s3_backup_bucket }}/"$FILENAME".dump
+
+echo " * Delete local file";
+# rm {{ postgresql_backup_dir }}/"$FILENAME".dump
+
+
+# Delete old files
+echo " * Deleting old backups...";
+
+# Loop through files
+aws s3 ls s3://{{ postgresql_s3_backup_bucket }}/ | while read -r line;  do
+    # Get file creation date
+    createDate=`echo $line|awk {'print $1" "$2'}`
+    createDate=`date -d"$createDate" +%s`
+
+    if [[ $createDate -lt $DELETION_TIMESTAMP ]]
+    then
+        # Get file name
+        FILENAME=`echo $line|awk {'print $4'}`
+        if [[ $FILENAME != "" ]]
+          then
+            echo "   -> Deleting $FILENAME"
+            aws s3 rm s3://{{ postgresql_s3_backup_bucket }}/$FILENAME
+        fi
+    fi
+done;
+
+echo " * Ping Healthcheck URL";
+curl -fsS --retry 3 {{ postgresql_db_backup_healthcheck }}

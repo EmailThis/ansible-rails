@@ -1,0 +1,8 @@
+---
+postgresql_backup_dir: "backups"
+postgresql_backup_filename_format: >-
+  {{ app_name }}-%Y%m%d-%H%M%S.pgdump
+postgresql_db_backup_healthcheck: ""
+postgresql_s3_backup_hour: "3"
+postgresql_s3_backup_minute: "*"
+postgresql_s3_backup_delete_after: "7 days"

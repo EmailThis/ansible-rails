@@ -1,0 +1,32 @@
+- name: Create postgresql backup directory
+  file:
+    path: "{{ postgresql_backup_dir }}"
+    recurse: true
+    state: directory
+
+- name: Set backup directory permissions
+  file:
+    path: "{{ postgresql_backup_dir }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0700
+
+- name: Upload backup script
+  become: true
+  template:
+    src: postgresql-backup.j2
+    dest: "{{ postgresql_backup_dir }}/postgresql-backup.sh"
+    mode: 0755
+
+- name: Configure backup cron job
+  cron:
+    name: Backup cron job
+    minute: "{{ postgresql_s3_backup_minute }}"
+    hour: "{{ postgresql_s3_backup_hour }}"
+    user: "{{ deploy_user }}"
+    job: "bash -lc {{ postgresql_backup_dir }}/postgresql-backup.sh"
+    cron_file: "postgresql-backup"
+    state: present
+
+    
