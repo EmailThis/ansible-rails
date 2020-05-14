@@ -1,0 +1,26 @@
+---
+- name: Install Debian | Add td-agent-bit apt-key
+  apt_key:
+    url: https://packages.fluentbit.io/fluentbit.key
+    state: present
+
+- name: Install Debian | Add td-agent-bit repository
+  apt_repository:
+    repo: 'deb https://packages.fluentbit.io/ubuntu/bionic bionic main'
+    state: present
+    filename: td-agent-bit
+    update_cache: true
+
+- name: Install fluentbit package
+  package:
+    name: td-agent-bit
+    state: present
+    update_cache: true
+  notify: restart fluentbit
+
+- name: Configure | Source td-agent-bit main conf
+  template:
+    src: td-agent-bit.conf.j2
+    dest: /etc/td-agent-bit/td-agent-bit.conf
+    mode: 0644
+  notify: restart fluentbit

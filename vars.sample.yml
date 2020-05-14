@@ -117,8 +117,39 @@ aws_secret: "{{ vault_aws_secret }}"
 postgresql_backup_dir: "{{ deploy_user_path }}/backups"
 postgresql_backup_filename_format: >-
   {{ app_name }}-%Y%m%d-%H%M%S.pgdump
-postgresql_db_backup_healthcheck: "NOTIFICATION_URL (eg: https://healthchecks.io/)"
+postgresql_db_backup_healthcheck: "NOTIFICATION_URL (eg: https://healthcheck.io/)"
 postgresql_s3_backup_bucket: "DB_BACKUP_BUCKET"
 postgresql_s3_backup_hour: "3"
 postgresql_s3_backup_minute: "*"
 postgresql_s3_backup_delete_after: "7 days" # days after which old backups should be deleted
+
+# fluentbit
+fluentbit_inputs:
+  - Name: tail
+    Path: "{{ app_logs_path }}/production.log"
+
+fluentbit_outputs:
+  - Name: http
+    Match: "*"
+    tls: On
+    Host: "" # e.g: loggly or sumologic logs endpoint
+    Port: 443
+    URI: ""  # e.g: /receiver/v1/http/{{ vault_sumologic_token }}
+    Format: json_lines
+    Json_Date_Key: timestamp
+    Json_Date_Format: iso8601
+    Retry_Limit: False
+
+logrotate_conf:
+  - path: "ansible"
+    conf: |
+      "{{ app_current_path }}/log/*.log" {
+        weekly
+        size 100M
+        missingok
+        rotate 12
+        compress
+        delaycompress
+        notifempty
+        copytruncate
+      }

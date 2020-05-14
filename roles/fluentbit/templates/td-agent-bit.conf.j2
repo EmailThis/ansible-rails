@@ -1,0 +1,21 @@
+[SERVICE]
+    Flush  {{ fluentbit_flush_seconds }}
+
+{% for input in fluentbit_inputs %}
+[INPUT]
+{% for key in input %}
+    {{ key }} {{ input[key] }}
+{% endfor %}
+{% endfor %}
+
+{% for output in fluentbit_outputs %}
+[OUTPUT]
+{% for key in output %}
+    {{ key }} {{ output[key] }}
+{% endfor %}
+{% endfor %}
+
+[FILTER]
+    Name record_modifier
+    Match *
+    Record hostname {{ fluentbit_hostname }}

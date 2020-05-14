@@ -1,0 +1,7 @@
+---
+- name: restart fluentbit
+  service:
+    name: td-agent-bit
+    enabled: true
+    state: restarted
+  become: true

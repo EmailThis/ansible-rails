@@ -1,0 +1,9 @@
+---
+- name: Install logrotate
+  apt: name=logrotate state=latest update_cache=yes
+
+- blockinfile:
+    path: "/etc/logrotate.d/{{ item.path }}"
+    block: "{{ item.conf }}"
+    create: yes
+  loop: "{{ logrotate_conf }}"

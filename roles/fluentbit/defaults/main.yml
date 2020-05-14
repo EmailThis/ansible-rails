@@ -1,0 +1,9 @@
+fluentbit_flush_seconds: 2
+
+# Default inputs
+fluentbit_inputs: []
+
+# Default outputs
+fluentbit_outputs: []
+
+fluentbit_hostname: "{{ hostname }}"
