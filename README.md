@@ -1,21 +1,21 @@
 # Ansible Rails 
 
-This project is meant to be a starting point for developing and deploying Ruby on Rails applications using Ansible. It uses Vagrant to provision a development environment. Ansistrano is used for deploying our code to staging and production environments.
+This project is meant to be a template for developing and deploying Ruby on Rails applications using Ansible. It uses Vagrant to provision a development environment. Ansistrano is used for deploying our code to staging and production environments.
 
-While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project specific requirements. 
+While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project-specific requirements. 
 
 ### What's included
 * Sensible defaults
 * Installation of common packages
 * Auto upgrade of all installed packages (TODO)
 * Set up a 'deploy' user with passwordless login
-* Prevent root login
 * SSH hardening
     * Prevent password login
     * Change the default SSH port
+    * Prevent root login
 * Setup UFW firewall
 * Setup Fail2ban
-* Logrotate (TODO)
+* Logrotate
 * Nginx with some sensible defaults (thanks to nginxconfig.io)
 * Certbot (for Let's encrypt SSL certificates)
 * Ruby (using Rbenv). Defaults to `2.6.6`. You can change it in the `vars.yml` file
@@ -24,7 +24,8 @@ While this is meant to work out of the box, you can tweak the files in the `role
 * Node.js - defaults to 12.x. You can change it in the `vars.yml` file.
 * Yarn
 * Redis (latest)
-* Postgresql. Defaults to 9.6. You can specify the version that you need in the `vars.yml` file.
+* Postgresql. Defaults to v12. You can specify the version that you need in the `vars.yml` file.
+* Backup our database everyday and upload the backups to S3 (if configured using the required variables in `vars.yml`)
 * Puma (with Systemd support for restarting automatically)
 * Sidekiq (with Systemd support for restarting automatically)
 * Ansistrano hooks for performing the following tasks
