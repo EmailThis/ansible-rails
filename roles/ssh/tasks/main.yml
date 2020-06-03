@@ -1,5 +1,5 @@
 ---
-- name: Update SSH configuration to be more secure.
+- name: Update SSH configuration to be more secure
   lineinfile:
     dest: "/etc/ssh/sshd_config"
     regexp: "{{ item.regexp }}"
@@ -22,4 +22,4 @@
       line: "GSSAPIAuthentication {{ ssh_gss_api_authentication }}"
     - regexp: "^X11Forwarding"
       line: "X11Forwarding {{ ssh_x11_forwarding }}"
-  notify: restart ssh
+  notify: Restart SSH

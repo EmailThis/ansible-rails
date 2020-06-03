@@ -21,3 +21,5 @@
       tags: redis
     - role: nginx
       tags: nginx
+    - role: logrotate
+      tags: logrotate

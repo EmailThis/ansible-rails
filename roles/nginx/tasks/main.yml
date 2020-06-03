@@ -1,9 +1,9 @@
 ---
-- name: Add Nginx repo
+- name: Add nginx repo
   apt_repository:
     repo: ppa:nginx/stable
 
-- name: Install Nginx
+- name: Install nginx
   apt:
     name: nginx
     state: present
@@ -20,7 +20,7 @@
     - nginx.conf
     - config
 
-- name: Generate DH Parameters with a different size (2048 bits)
+- name: Generate DH param (2048 bits)
   openssl_dhparam:
     path: /etc/nginx/dhparam.pem
     size: 2048
@@ -37,7 +37,7 @@
     - sites-available
     - sites-enabled
 
-- name: Copy nginx configuration in place.
+- name: Copy nginx configuration in place
   template:
     src: "{{ nginx_conf_template }}"
     dest: "/etc/nginx/sites-available/default"
@@ -51,7 +51,7 @@
     dest: /etc/nginx/sites-enabled/default
     state: link
 
-- name: Set Nginx user
+- name: Set nginx user
   lineinfile: 
     dest: /etc/nginx/nginx.conf
     regexp: "^user"
@@ -63,7 +63,7 @@
 - name: Restart nginx (when not running certbot)
   command: "/bin/true"
   notify: 
-    - reload nginx
-    - restart nginx
+    - Reload nginx
+    - Restart nginx
   when: nginx_https_enabled != true 
 

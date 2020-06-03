@@ -1,2 +1,2 @@
-- name: restart ufw
+- name: Restart UFW
   service: name=ufw state=restarted

@@ -1,5 +1,5 @@
 ---
-- name: Install Prerequisites
+- name: Install prerequisites
   apt: name=aptitude update_cache=yes state=latest force_apt_get=yes
 
 - name: Install required system packages

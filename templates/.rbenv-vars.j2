@@ -1,0 +1,9 @@
+RAILS_ENV=production
+RACK_ENV=production
+RAILS_MASTER_KEY={{ vault_rails_master_key }}
+DB_POOL={{ rails_db_pool }}
+
+# Puma
+APP_DIR={{ app_current_path }}
+SHARED_DIR={{ app_shared_path }}
+WEB_CONCURRENCY={{ puma_web_concurrency }}

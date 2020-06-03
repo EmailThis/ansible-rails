@@ -25,7 +25,7 @@
     line: '%{{ deploy_group }} ALL=(ALL) NOPASSWD: ALL'
     validate: '/usr/sbin/visudo -cf %s'
 
-- name: Create a new regular user with sudo privileges
+- name: Create a new user with sudo privileges
   user:
     name: "{{ deploy_user }}"
     state: present

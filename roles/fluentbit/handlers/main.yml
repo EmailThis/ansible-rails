@@ -1,5 +1,5 @@
 ---
-- name: restart fluentbit
+- name: Restart fluentbit
   service:
     name: td-agent-bit
     enabled: true

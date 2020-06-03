@@ -1,5 +1,5 @@
 ---
-- name: Deploy our rails application
+- name: Deploy our Rails ap
   hosts: all
   become: true
   become_user: "{{ deploy_user }}"
@@ -13,8 +13,8 @@
         group: "{{ deploy_group }}"
 
     - name: Copy rbenv-vars file
-      copy:
-        src: ".production.rbenv-vars"
+      template:
+        src: ".rbenv-vars.j2"
         dest: "{{ app_root_path }}/.rbenv-vars"
         owner: "{{ deploy_user }}" 
         group: "{{ deploy_group }}"
@@ -39,15 +39,15 @@
         - config
         - config/puma
         - assets
-        - node_modules # Webpacker
+        - node_modules
     
-    - name: Upload files
-      copy:
+    - name: Upload shared files
+      template:
         src: "{{ item.src }}"
         dest: "{{ app_shared_path }}/{{ item.dest }}"
         owner: "{{ deploy_user }}" 
         group: "{{ deploy_group }}"
-      with_items: "{{ files_to_copy }}"
+      with_items: "{{ shared_files_to_copy }}"
       tags:
         - copy
 

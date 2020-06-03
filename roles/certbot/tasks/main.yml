@@ -7,7 +7,7 @@
     url: "{{ certbot_url }}"
     dest: "{{ certbot_dir }}/certbot-auto"
 
-- name: Ensure certbot-auto is executable.
+- name: Ensure that certbot-auto is executable
   file:
     path: "{{ certbot_dir }}/certbot-auto"
     mode: 0755
@@ -17,11 +17,11 @@
     name: nginx
     state: stopped
 
-- name: Get certificate
+- name: Check & get new certificate
   include_tasks: cert.yml
   loop: "{{ certbot_domains }}"
   loop_control:
     loop_var: domain
 
-- name: Add certbot renewel cronjob
+- name: Add certbot renewal cronjob
   cron: name="renew letsencrypt certificates" hour="0" minute="0" job="/bin/bash {{ certbot_dir }}/certbot-auto renew --non-interactive --quiet --standalone --pre-hook 'service nginx stop' --post-hook 'service nginx start'"
