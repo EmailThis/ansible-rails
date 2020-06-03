@@ -3,7 +3,7 @@
     <img src="./images/ansible-rails-promo.jpg" alt="Ansible Rails Promo Image" style="max-width:100%;">
 <p>
 
-Ansible Rails is meant to be a starting point for developing and deploying Ruby on Rails applications using Ansible. It uses Vagrant to provision a development environment. [Ansistrano](https://github.com/ansistrano/deploy) is used for deploying our code to staging and production environments.
+Ansible Rails is a playbook for easily deploying Ruby on Rails applications. It uses Vagrant to provision an environment where you can test your deploys. [Ansistrano](https://github.com/ansistrano/deploy) is used for finally deploying our app to staging and production environments.
 
 While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project-specific requirements. 
 
@@ -13,7 +13,7 @@ While this is meant to work out of the box, you can tweak the files in the `role
 
 ### What does this do?
 * Configure our server with some sensible defaults
-* Install the following useful packages. See notes below for more details.
+* Install required/useful packages. See notes below for more details.
 * Auto upgrade all installed packages (TODO)
 * Create a new deployment user (called 'deploy') with passwordless login
 * Prevent root login
@@ -21,7 +21,7 @@ While this is meant to work out of the box, you can tweak the files in the `role
     * Prevent password login
     * Change the default SSH port
     * Prevent root login
-* Setup UFW firewall
+* Setup UFW (firewall)
 * Setup Fail2ban
 * Install Logrotate
 * Setup Nginx with some sensible config (thanks to nginxconfig.io)
@@ -91,12 +91,12 @@ vagrant up
 ```
 Now open your browser and navigate to 192.168.50.2. You should see your Rails application.
 
-If you don't wish to use Vagrant, clone this repo, change the hosts in the `inventories/development.ini` and then run the following command
+If you don't wish to use Vagrant, clone this repo, modify the `inventories/development.ini` file to suit your needs, and then run the following command
 ```
 ansible-playbook -i inventories/development.ini provision.yml
 ```
 
-To deploy this app to your production server, create another file inside `inventories` directory with the following contents. For this, you would need a VPS. I've used [DigitalOcean](https://m.do.co/c/031c76b9c838) and [Vultr](https://www.vultr.com/?ref=8597223) in production for my apps and both these services are top-notch.
+To deploy this app to your production server, create another file inside `inventories` directory called `production.ini` with the following contents. For this, you would need a VPS. I've used [DigitalOcean](https://m.do.co/c/031c76b9c838) and [Vultr](https://www.vultr.com/?ref=8597223) in production for my apps and both these services are top-notch.
 ```
 [web]
 192.168.50.2 # replace with IP address of your server.
@@ -201,8 +201,13 @@ postgresql_s3_backup_delete_after: "7 days" # days after which old backups shoul
 
 ---
 
+### Motivation
+I use Heroku to deploy my Rails apps. It makes deployment really easy and I've got no complaints. However, I always wanted to learn how it all works under the hood. Over the last couple of months, I decided to learn more about how to set up a server and deploy a Rails app to production. This project is a consolidation of my learnings.
+
+--- 
+
 ### Credits
-* [Geerling Guy](https://github.com/geerlingguy) (for this wonderful book on Ansible)
+* [Geerling Guy](https://github.com/geerlingguy) (for his wonderful book on Ansible)
 * [dresden-weekly/ansible-rails](https://github.com/dresden-weekly/ansible-rails)
 
 ---
