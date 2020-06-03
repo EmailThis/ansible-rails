@@ -1,5 +1,7 @@
 # Ansible Rails 
 
+![Ansible Rails Promo Image](./images/ansible-rails-promo.jpg)
+
 Ansible Rails is meant to be a starting point for developing and deploying Ruby on Rails applications using Ansible. It uses Vagrant to provision a development environment. [Ansistrano](https://github.com/ansistrano/deploy) is used for deploying our code to staging and production environments.
 
 While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project-specific requirements. 
