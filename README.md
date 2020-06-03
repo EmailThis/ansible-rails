@@ -3,7 +3,6 @@
     <img src="./images/ansible-rails-promo.jpg" alt="Ansible Rails Promo Image" style="max-width:100%;">
 <p>
 
-
 Ansible Rails is meant to be a starting point for developing and deploying Ruby on Rails applications using Ansible. It uses Vagrant to provision a development environment. [Ansistrano](https://github.com/ansistrano/deploy) is used for deploying our code to staging and production environments.
 
 While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project-specific requirements. 
@@ -16,7 +15,6 @@ While this is meant to work out of the box, you can tweak the files in the `role
 * Auto upgrade all installed packages (TODO)
 * Create a new deployment user (called 'deploy') with passwordless login
 * Prevent root login
-
 * SSH hardening
     * Prevent password login
     * Change the default SSH port
