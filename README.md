@@ -7,6 +7,8 @@ Ansible Rails is meant to be a starting point for developing and deploying Ruby 
 
 While this is meant to work out of the box, you can tweak the files in the `roles` directory in order to satisfy your project-specific requirements. 
 
+> **Shameless plug:** If you're looking for a simple bookmarking tool, try [EmailThis.me](https://www.emailthis.me) - a simpler alternative to Pocket that helps you *save ad-free articles and web pages to your email inbox*.
+
 ---
 
 ### What does this do?
@@ -108,8 +110,7 @@ ansible_python_interpreter=/usr/bin/python3
 
 ### Additional Configuration
 
-#####  Installing additional packages
-
+####  Installing additional packages
 By default, the following packages are installed. You can add/remove packages to this list by changing the `required_package` variable in `app-vars.yml`
 ```
     - curl
@@ -143,15 +144,72 @@ By default, the following packages are installed. You can add/remove packages to
     - libjemalloc-dev # jemalloc
 ```
 
+####  Enable UFW
+You can enable UFW by adding the role to `provision.yml` like so - 
+```
+roles:
+    ...
+    ...
+    - role: ufw
+      tags: ufw
+```
+
+Then you can set up the UFW rules in `app-vars.yml` like so -
+```
+ufw_rules:
+  - { rule: "allow", proto: "tcp", from: "any", port: "80" }
+  - { rule: "allow", proto: "tcp", from: "any", port: "443" }
+```
+
+#### Enable Certbot (Let's Encrypt SSL certificates)
+
+Add the role to `provision.yml`
+```
+roles:
+    ...
+    ...
+    - role: certbot
+      tags: certbot
+```
+
+Add the following variables to `app-vars.yml`
+```
+nginx_https_enabled: true
+
+certbot_email: "you@email.me"
+certbot_domains:
+  - "domain.com"
+  - "www.domain.com"
+```
+
+#### PostgreSQL Database Backups
+By default, daily backup is enabled in the `app-vars.yml` file. In order for this to work, the following variables need to be set. If you do not wish to store backups, remove (or uncomment) these lines from `app-vars.yml`.
+
+```
+aws_key: "{{ vault_aws_key }}" # store this in group_vars/all/vault.yml that we created earlier
+aws_secret: "{{ vault_aws_secret }}"
+
+postgresql_backup_dir: "{{ deploy_user_path }}/backups"
+postgresql_backup_filename_format: >-
+  {{ app_name }}-%Y%m%d-%H%M%S.pgdump
+postgresql_db_backup_healthcheck: "NOTIFICATION_URL (eg: https://healthcheck.io/)" # optional
+postgresql_s3_backup_bucket: "DB_BACKUP_BUCKET" # name of the S3 bucket to store backups
+postgresql_s3_backup_hour: "3"
+postgresql_s3_backup_minute: "*"
+postgresql_s3_backup_delete_after: "7 days" # days after which old backups should be deleted
+```
+
+---
+
+### Credits
+* [Geerling Guy](https://github.com/geerlingguy) (for this wonderful book on Ansible)
+* [dresden-weekly/ansible-rails](https://github.com/dresden-weekly/ansible-rails)
+
 ---
 
 ### Questions, comments, suggestions?
 Please let me know if you run into any issues or if you have any questions. I'd be happy to help. I would also welcome any improvements/suggestions by way of pull requests.
 
 
-
-Thanks,
-
-Bharani
-
-Maker @ [EmailThis.me](https://www.emailthis.me)
+Bharani <br/>
+Founder @ [EmailThis.me](https://www.emailthis.me)
