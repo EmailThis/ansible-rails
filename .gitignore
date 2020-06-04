@@ -2,4 +2,3 @@
 .vault_pass
 /tmp/
 .vagrant/
-app-vars.yml

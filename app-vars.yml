@@ -1,0 +1,152 @@
+---
+app_name:           YOUR_APP_NAME
+deploy_user:        deployer
+deploy_group:       "{{ deploy_user }}"
+deploy_user_path:   "/home/{{ deploy_user }}"
+
+# App Git repo
+app_git_repo:       "YOUR_GIT_REPO"
+app_git_branch:     "master"
+
+# Rails app
+app_root_path:      "{{ deploy_user_path }}/{{ app_name }}"
+app_current_path:   "{{ app_root_path }}/current"
+app_releases_path:  "{{ app_root_path }}/releases"
+app_shared_path:    "{{ app_root_path }}/shared"
+app_pids_path:      "{{ app_shared_path }}/tmp/pids"
+app_logs_path:      "{{ app_shared_path }}/logs"
+app_sockets_path:   "{{ app_shared_path }}/sockets"
+rails_db_pool:      20
+rails_environment:  production
+
+# Puma
+puma_service_file:  "puma.service.j2"
+puma_config_file:   "{{ app_current_path }}/config/puma.rb"
+puma_socket:        "{{ app_sockets_path }}/puma.sock"
+puma_web_concurrency: 2
+
+# Sidekiq
+sidekiq_service_file:  "sidekiq.service.j2"
+
+# Ansistrano
+ansistrano_deploy_to: "{{ app_root_path }}"
+ansistrano_keep_releases: 3
+ansistrano_deploy_via: git
+ansistrano_git_repo: "{{ app_git_repo }}"
+ansistrano_git_branch: "{{ app_git_branch }}"
+ansistrano_after_cleanup_tasks_file: "{{ playbook_dir }}/deploy_tasks/after_cleanup.yml"
+ansistrano_git_identity_key_path: "~/.ssh/id_rsa"
+ansistrano_ensure_shared_paths_exist: yes
+ansistrano_ensure_basedirs_shared_files_exist: yes
+
+ansistrano_shared_paths:
+  - log           # log -> ../../shared/log
+  - tmp           # tmp -> ../../shared/tmp
+  - vendor        # vendor -> ../../shared/vendor
+  - public/assets # For rails asset pipeline
+  - public/packs  # For webpacker
+  - node_modules  # For webpacker node_modules -> ../../shared/node_modules
+
+shared_files_to_copy:
+  - { src: database.yml.j2, dest: config/database.yml }
+
+# Common
+required_packages:
+  - zlib1g-dev 
+  - build-essential 
+  - libssl-dev 
+  - libreadline-dev 
+  - libyaml-dev 
+  - libxml2-dev 
+  - libxslt1-dev 
+  - libcurl4-openssl-dev
+  - libffi-dev 
+  - dirmngr 
+  - gnupg
+  - autoconf
+  - bison
+  - libreadline6-dev
+  - libncurses5-dev
+  - libgdbm5 
+  - libgdbm-dev
+  - libpq-dev # postgresql client
+  - libjemalloc-dev # jemalloc
+
+# Ruby
+ruby_version: 2.6.6
+rbenv_ruby_configure_opts: "RUBY_CONFIGURE_OPTS=--with-jemalloc"
+rbenv_root_path: "{{ deploy_user_path }}/.rbenv"
+rbenv_shell_rc_path: "{{ deploy_user_path }}/.bashrc"
+rubies_path: "{{ rbenv_root_path }}/versions"
+ruby_path: "{{ rubies_path }}/{{ ruby_version }}"
+rbenv_bin: "{{ rbenv_root_path }}/bin/rbenv"
+rbenv_bundle: "{{ rbenv_root_path }}/shims/bundle"
+
+# Nodejs
+nodejs_version: "12.x"
+
+# Postgresql
+postgresql_version: "9.6"
+postgresql_db_user: "{{ deploy_user }}_postgresql_user"
+postgresql_db_password: "{{ vault_postgresql_db_password }}" # from vault
+postgresql_db_name: "{{ app_name }}_production"
+postgresql_listen:
+  - "localhost"
+  - "{{ ansible_default_ipv4.address }}" # only if db is on a separate server
+
+
+# nginx
+nginx_https_enabled: false # replace after setting up certbot
+nginx_conf_template: "nginx.conf.j2"
+
+
+# certbot
+# certbot_email: "admin@{{ inventory_hostname }}"
+# certbot_domains:
+#   - "{{ inventory_hostname }}"
+#   - "www.{{ inventory_hostname }}"
+
+
+# PostgreSQL Backup to S3
+aws_key: "{{ vault_aws_key }}"
+aws_secret: "{{ vault_aws_secret }}"
+
+postgresql_backup_dir: "{{ deploy_user_path }}/backups"
+postgresql_backup_filename_format: >-
+  {{ app_name }}-%Y%m%d-%H%M%S.pgdump
+postgresql_db_backup_healthcheck: "NOTIFICATION_URL (eg: https://healthcheck.io/)"
+postgresql_s3_backup_bucket: "DB_BACKUP_BUCKET"
+postgresql_s3_backup_hour: "3"
+postgresql_s3_backup_minute: "*"
+postgresql_s3_backup_delete_after: "7 days" # days after which old backups should be deleted
+
+# fluentbit
+fluentbit_inputs:
+  - Name: tail
+    Path: "{{ app_logs_path }}/production.log"
+
+fluentbit_outputs:
+  - Name: http
+    Match: "*"
+    tls: On
+    Host: "" # e.g: loggly or sumologic logs endpoint
+    Port: 443
+    URI: ""  # e.g: /receiver/v1/http/{{ vault_sumologic_token }}
+    Format: json_lines
+    Json_Date_Key: timestamp
+    Json_Date_Format: iso8601
+    Retry_Limit: False
+
+logrotate_conf:
+  - path: "ansible"
+    conf: |
+      "{{ app_current_path }}/log/*.log" {
+        weekly
+        size 100M
+        missingok
+        rotate 12
+        compress
+        delaycompress
+        notifempty
+        copytruncate
+      }
