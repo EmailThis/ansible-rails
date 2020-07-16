@@ -36,7 +36,7 @@ While this is meant to work out of the box, you can tweak the files in the `role
 * Redis (latest)
 * Postgresql. 
     * Defaults to v12. You can specify the version that you need in the `app-vars.yml` file.
-* Puma (with Systemd support for restarting automatically)
+* Puma (with Systemd support for restarting automatically) **See Puma Config section below**
 * Sidekiq (with Systemd support for restarting automatically)
 * Ansistrano hooks for performing the following tasks - 
     * Installing all our gems
@@ -197,6 +197,43 @@ postgresql_s3_backup_bucket: "DB_BACKUP_BUCKET" # name of the S3 bucket to store
 postgresql_s3_backup_hour: "3"
 postgresql_s3_backup_minute: "*"
 postgresql_s3_backup_delete_after: "7 days" # days after which old backups should be deleted
+```
+
+
+#### Puma config
+
+Your Rails app needs to have a puma config file (usually in `/config/puma.rb`). Here's a sample - 
+
+```
+threads_count = ENV.fetch("RAILS_MAX_THREADS") { 5 }
+threads threads_count, threads_count
+
+port ENV.fetch("PORT") { 3000 }
+
+rails_env = ENV.fetch("RAILS_ENV") { "development" }
+environment rails_env
+
+if %w[production staging].member?(rails_env)
+    app_dir = ENV.fetch("APP_DIR") { "YOUR_APP/current" }
+    directory app_dir
+
+    shared_dir = ENV.fetch("SHARED_DIR") { "YOUR_APP/shared" }
+
+    # Logging
+    stdout_redirect "#{shared_dir}/log/puma.stdout.log", "#{shared_dir}/log/puma.stderr.log", true
+    
+    pidfile "#{shared_dir}/tmp/pids/puma.pid"
+    state_path "#{shared_dir}/tmp/pids/puma.state"
+    
+    # Set up socket location
+    bind "unix://#{shared_dir}/sockets/puma.sock"
+    
+    workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+    preload_app!
+
+elsif rails_env == "development"
+    plugin :tmp_restart
+end
 ```
 
 ---
