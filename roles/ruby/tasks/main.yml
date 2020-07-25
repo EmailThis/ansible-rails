@@ -3,7 +3,7 @@
   become: yes
   become_user: "{{ deploy_user }}"
   git:
-    repo: "https://github.com/sstephenson/rbenv.git"
+    repo: "https://github.com/rbenv/rbenv.git"
     dest: "{{ rbenv_root_path }}"
     depth: 1
     accept_hostkey: yes
@@ -14,7 +14,7 @@
   become: yes
   become_user: "{{ deploy_user }}"
   git:
-    repo: "https://github.com/sstephenson/ruby-build.git"
+    repo: "https://github.com/rbenv/ruby-build.git"
     dest: "{{ rbenv_root_path }}/plugins/ruby-build"
     depth: 1
 
