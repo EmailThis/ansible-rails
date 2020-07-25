@@ -16,7 +16,6 @@ While this is meant to work out of the box, you can tweak the files in the `role
 * Install required/useful packages. See notes below for more details.
 * Auto upgrade all installed packages (TODO)
 * Create a new deployment user (called 'deploy') with passwordless login
-* Prevent root login
 * SSH hardening
     * Prevent password login
     * Change the default SSH port
